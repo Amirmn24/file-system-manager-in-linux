@@ -6,11 +6,6 @@
 int main() {
     fs_open_disk();
 
-    printf("Extended FS CLI.\n");
-    printf("User Mgmt: useradd, userdel, groupadd, groupdel, usermod, login, whoami\n");
-    printf("File Perm: chmod, chown, chgrp, getfacl\n");
-    printf("File Ops:  open, read, write, shrink, rm, stats, exit\n");
-
     while (1) {
         char cmd[32];
         char line[512];
@@ -22,7 +17,7 @@ int main() {
         int items = sscanf(line, "%s", cmd);
         if (items < 1) continue;
 
-        // --- NEW COMMANDS ---
+        //New commands
         if (strcmp(cmd, "useradd") == 0) {
             char u[32];
             if (sscanf(line, "%*s %s", u) == 1) fs_useradd(u);
@@ -44,13 +39,11 @@ int main() {
             else printf("Usage: groupdel <groupname>\n");
         }
         else if (strcmp(cmd, "usermod") == 0) {
-            // Simulated: usermod -aG user group -> implemented as usermod user group
+
             char u[32], g[32], flag[8];
-            // Simple parsing: usermod user group (ignoring -aG syntax for simplicity or implementing custom parse)
-            // Let's stick to prompt: usermod -aG <user> <group>
-            // Parsing "-aG" is tricky with sscanf order, assuming: usermod -aG user group
             char arg1[32], arg2[32], arg3[32];
             int n = sscanf(line, "%*s %s %s %s", arg1, arg2, arg3);
+
             if (n == 3 && strcmp(arg1, "-aG") == 0) {
                  fs_usermod(arg2, arg3);
             } else {

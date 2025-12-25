@@ -40,7 +40,7 @@ typedef struct {
     int32_t next; // Offset to next group block
 } Group;
 
-// Modified SuperBlock
+//SuperBlock
 typedef struct {
     int32_t magic;
     int32_t version;
@@ -55,7 +55,7 @@ typedef struct {
     int32_t next_gid; // Auto-increment counter
 } SuperBlock;
 
-// Modified FileEntry
+//FileEntry
 typedef struct {
     char name[MAX_FILENAME];
     int32_t size;
