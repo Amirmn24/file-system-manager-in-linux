@@ -9,13 +9,11 @@ SuperBlock sb;
 FileEntry current_file;
 int32_t current_file_pos = -1;
 
-// Global Context for currently logged-in user
-// Default is root (0)
+// Global Context for currently loggedIn user
 int32_t current_uid = 0; 
 int32_t current_gid = 0; 
 int32_t current_user_groups[MAX_USER_GROUPS]; 
 
-// Forward Declarations
 int32_t alloc_block(int32_t size);
 void free_block(int32_t start, int32_t size);
 int fs_check_permission(FileEntry *fe, int mode);
@@ -23,7 +21,7 @@ int32_t find_user_by_name(const char* name, User* out_user);
 int32_t find_group_by_name(const char* name, Group* out_group);
 void reload_current_user_groups();
 
-// --- MEMORY MANAGEMENT (Kept same as provided) ---
+//Memory management
 void fs_save_superblock() {
     fseek(disk, 0, SEEK_SET);
     fwrite(&sb, sizeof(SuperBlock), 1, disk);
@@ -127,7 +125,7 @@ void free_block(int32_t start, int32_t size) {
     fs_save_superblock();
 }
 
-// --- INITIALIZATION ---
+//Initialization
 
 void fs_create_root_user() {
     // Create Root Group
@@ -205,8 +203,6 @@ void fs_open_disk() {
     }
 }
 
-// --- HELPER FUNCTIONS ---
-
 int32_t fs_find_file(const char *filename) {
     int32_t pos = sb.first_file;
     while (pos != -1) {
@@ -219,7 +215,7 @@ int32_t fs_find_file(const char *filename) {
     return -1;
 }
 
-// Returns 1 if allowed, 0 if denied
+// Returns 1 if allowed, 0 otherwise
 int fs_check_permission(FileEntry *fe, int required_mode) {
     // 1. Root allows everything
     if (current_uid == 0) return 1;
@@ -227,7 +223,7 @@ int fs_check_permission(FileEntry *fe, int required_mode) {
     int file_mode = fe->permission; // e.g., 0755
     int allowed = 0;
 
-    // Extract octal parts: Owner (bits 6-8), Group (bits 3-5), Others (bits 0-2)
+    //Owner (bits 6-8), Group (bits 3-5), Others (bits 0-2)
     int owner_perm = (file_mode >> 6) & 0x7;
     int group_perm = (file_mode >> 3) & 0x7;
     int other_perm = file_mode & 0x7;
@@ -301,7 +297,7 @@ void reload_current_user_groups() {
     }
 }
 
-// --- USER & GROUP COMMANDS ---
+//User and group
 
 void fs_useradd(const char *username) {
     if (current_uid != 0) { printf("Permission denied: Only root can add users.\n"); return; }
@@ -319,10 +315,6 @@ void fs_useradd(const char *username) {
     u.uid = sb.next_uid++;
     strcpy(u.username, username);
     for(int i=0; i<MAX_USER_GROUPS; i++) u.gids[i] = -1;
-    // Default group? Use 'nogroup' or none for now. Or use root (unsafe).
-    // Let's make user belong to no group by default until usermod is used, 
-    // or arguably should create a group with same name.
-    // For simplicity: No default group.
     
     u.next = sb.first_user;
     
