@@ -31,39 +31,70 @@ void fs_save_superblock() {
 #include <time.h>
 
 void fs_stress_test() {
-    printf("Starting Stress Test on LINKED LIST FileSystem...\n");
+    printf("Starting CORRCTED Stress Test on LINKED LIST FileSystem...\n");
+    printf("Disk Size: %d bytes\n", DISK_SIZE);
+
+    // شروع زمان‌گیری
     clock_t start = clock();
 
-    int FILE_COUNT = 1000;
+    int FILE_COUNT = 1000; // تعداد فایل‌ها
     char filename[32];
-    char data[] = "Test data for benchmarking filesystem performance...";
+    char data[] = "This is a test data for benchmarking...";
 
-    // 1. Create and Write Files
+    // مرحله ۱: ایجاد فایل‌ها و تخصیص فضا
+    printf("Step 1: Creating %d files with 4KB data blocks...\n", FILE_COUNT);
     for (int i = 0; i < FILE_COUNT; i++) {
         sprintf(filename, "file_%d", i);
-        fs_open(filename, 1); // Create
-        int pos = fs_find_file(filename); // Get simple handle logic
-        // Note: In this simple FS, write uses absolute pos, 
-        // but for stress test we simulate allocation load:
-        fs_write(sb.first_free_block + 10, sizeof(data), data); 
-    }
+        
+        // 1. ایجاد فایل (تخصیص FileEntry)
+        int ret = fs_open(filename, 1); 
+        if (ret == -1) {
+            printf("Error: Could not create file %d (Disk Full or Limit Reached)\n", i);
+            break; 
+        }
 
-    // 2. Delete half of them (to fragment the list)
+        // 2. تخصیص واقعی بلوک داده (این بخش گلوگاه اصلی است)
+        // ما 4096 بایت درخواست می‌کنیم تا alloc_block مجبور به جستجو و تقسیم بلوک شود
+        int32_t data_block_pos = alloc_block(4096);
+        
+        if (data_block_pos == -1) {
+            printf("Error: Disk Full during data allocation for file %d\n", i);
+            break;
+        }
+
+        // 3. نوشتن در بلوک تخصیص داده شده (نه روی هدر لیست آزاد!)
+        fs_write(data_block_pos, sizeof(data), data);
+        
+        // نمایش پیشرفت هر 100 فایل
+        if (i % 100 == 0) printf(".");
+    }
+    printf("\nAllocation Done.\n");
+
+    // مرحله ۲: حذف نیمی از فایل‌ها (برای ایجاد فرگمنت و تکه‌تکه شدن دیسک)
+    printf("Step 2: Deleting half of the files...\n");
     for (int i = 0; i < FILE_COUNT; i += 2) {
         sprintf(filename, "file_%d", i);
         fs_rm(filename);
+        // توجه: در سیستم واقعی باید بلوک داده هم free شود، اما fs_rm فعلی شما
+        // فقط FileEntry را حذف می‌کند. برای تست تخصیص همین کافیست.
     }
 
-    // 3. Create new files again (forcing search in free list)
-    for (int i = 0; i < 500; i++) {
+    // مرحله ۳: ایجاد فایل‌های جدید (مجبور کردن سیستم به جستجو در فضاهای خالی شده)
+    printf("Step 3: Creating 200 new files in fragmented space...\n");
+    for (int i = 0; i < 200; i++) {
         sprintf(filename, "new_file_%d", i);
         fs_open(filename, 1);
+        int32_t data_pos = alloc_block(4096); // تلاش برای پر کردن جاهای خالی
     }
 
     clock_t end = clock();
     double time_taken = ((double)(end - start)) / CLOCKS_PER_SEC;
+    
+    printf("\n------------------------------------------------\n");
     printf("Stress Test Completed in %.4f seconds.\n", time_taken);
+    printf("------------------------------------------------\n");
 }
+
 
 
 int32_t alloc_block(int32_t size) {
