@@ -118,9 +118,6 @@ int main() {
              char name[32];
              if(sscanf(line, "%*s %s", name) == 1) fs_rm(name);
         }
-                else if (strcmp(cmd, "stressTest") == 0) {
-            fs_stress_test();
-        }
         else if (strcmp(cmd, "stats") == 0) fs_stats();
         else if (strcmp(cmd, "exit") == 0) break;
         else printf("Unknown command.\n");
