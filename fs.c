@@ -30,6 +30,44 @@ void fs_save_superblock() {
     fflush(disk);
 }
 
+#include <time.h>
+
+void fs_stress_test() {
+    printf("Starting Stress Test on LINKED LIST FileSystem...\n");
+    clock_t start = clock();
+
+    int FILE_COUNT = 1000;
+    char filename[32];
+    char data[] = "Test data for benchmarking filesystem performance...";
+
+    // 1. Create and Write Files
+    for (int i = 0; i < FILE_COUNT; i++) {
+        sprintf(filename, "file_%d", i);
+        fs_open(filename, 1); // Create
+        int pos = fs_find_file(filename); // Get simple handle logic
+        // Note: In this simple FS, write uses absolute pos, 
+        // but for stress test we simulate allocation load:
+        fs_write(sb.first_free_block + 10, sizeof(data), data); 
+    }
+
+    // 2. Delete half of them (to fragment the list)
+    for (int i = 0; i < FILE_COUNT; i += 2) {
+        sprintf(filename, "file_%d", i);
+        fs_rm(filename);
+    }
+
+    // 3. Create new files again (forcing search in free list)
+    for (int i = 0; i < 500; i++) {
+        sprintf(filename, "new_file_%d", i);
+        fs_open(filename, 1);
+    }
+
+    clock_t end = clock();
+    double time_taken = ((double)(end - start)) / CLOCKS_PER_SEC;
+    printf("Stress Test Completed in %.4f seconds.\n", time_taken);
+}
+
+
 int32_t alloc_block(int32_t size) {
     int32_t current_pos = sb.first_free_block;
     int32_t prev_pos = -1;

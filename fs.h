@@ -100,4 +100,6 @@ void fs_close();
 void fs_stats();
 void fs_visualize_free_list();
 
+void fs_stress_test();
+
 #endif
