@@ -699,3 +699,48 @@ void fs_visualize_free_list() {
         pos = fb.next;
     }
 }
+
+void stress_old(int file_count, int ops) {
+    char name[64];
+    char data[128];
+
+    // 1. create files
+    for (int i = 0; i < file_count; i++) {
+        sprintf(name, "f_%d", i);
+        fs_open(name, 1);
+        sprintf(data, "data_%d", i);
+        fs_write(0, strlen(data), data);
+    }
+
+    // 2. random operations
+    for (int i = 0; i < ops; i++) {
+        int r = rand() % 4;
+        int idx = rand() % file_count;
+        sprintf(name, "f_%d", idx);
+
+        switch (r) {
+            case 0: // read
+                fs_open(name, 0);
+                {
+                    char buf[128];
+                    fs_read(0, 64, buf);
+                }
+                break;
+
+            case 1: // write
+                fs_open(name, 0);
+                sprintf(data, "new_data_%d", i);
+                fs_write(0, strlen(data), data);
+                break;
+
+            case 2: // delete
+                fs_rm(name);
+                break;
+
+            case 3: // recreate
+                fs_open(name, 1);
+                fs_write(0, 16, "abc");
+                break;
+        }
+    }
+}

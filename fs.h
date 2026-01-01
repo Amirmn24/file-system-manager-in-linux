@@ -100,4 +100,6 @@ void fs_close();
 void fs_stats();
 void fs_visualize_free_list();
 
+void stress_old(int file_count, int ops);
+
 #endif

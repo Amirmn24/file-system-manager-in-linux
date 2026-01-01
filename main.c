@@ -6,6 +6,9 @@
 int main() {
     fs_open_disk();
 
+    stress_old(1000, 50000);   // baseline
+    return 0;
+    
     while (1) {
         char cmd[32];
         char line[512];
